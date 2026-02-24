@@ -52,7 +52,7 @@ backend/
 │
 ├── docs/
 │   ├── ARCHITECTURE.md            # This file
-│   ├── DEPLOYMENT.md              # Render, Railway, cloud PostgreSQL
+│   ├── DEPLOYMENT.md              # Supabase DB, Railway deploy
 │   ├── PROJECT_STRUCTURE.md      # Folder overview
 │   ├── ADMIN_AUTH.md              # JWT and create-admin
 │   └── EMAIL_SETUP.md             # Gmail App Password

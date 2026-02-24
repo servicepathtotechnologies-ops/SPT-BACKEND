@@ -176,8 +176,7 @@ Use the returned `token` in the `Authorization` header for protected routes: `Au
 
 See **docs/DEPLOYMENT.md** for:
 
-- **Render** — Web Service setup, env vars, health check
-- **Railway** — Service + Postgres, env vars
-- **Cloud PostgreSQL** — Neon, Supabase, Railway Postgres, Render Postgres; SSL and schema
+- **Supabase** — Database only; full setup in **../docs/SUPABASE_SETUP.md**
+- **Railway** — Deploy the backend; use Supabase for **DATABASE_URL**
 
 Set **NODE_ENV=production** and provide **DATABASE_URL**, **JWT_SECRET**, **CORS_ORIGIN**, and optionally **MAIL_USER**/**MAIL_PASS** on the platform.

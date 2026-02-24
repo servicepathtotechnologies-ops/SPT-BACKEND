@@ -60,7 +60,7 @@ Use the same Gmail account for `MAIL_USER` that you used to create the App Passw
 
 - **Never commit** `MAIL_USER` or `MAIL_PASS` to version control. Use `.env` and keep it in `.gitignore`.
 - Use **App Passwords**, not your main Gmail password.
-- On production (Railway, Render, etc.), set `MAIL_USER` and `MAIL_PASS` in the platform’s environment variables, not in code.
+- On production (Railway, etc.), set `MAIL_USER` and `MAIL_PASS` in the platform’s environment variables, not in code.
 - If `MAIL_USER` or `MAIL_PASS` is missing, the API still works; it only skips sending the notification and logs a warning.
 
 ---

@@ -17,6 +17,12 @@ import { errorHandler } from "./middleware/errorHandler.js";
 const app = express();
 const { isProduction } = config;
 
+// Behind Render or other reverse proxies, trust the first proxy hop so
+// express-rate-limit can correctly use X-Forwarded-For.
+if (isProduction) {
+  app.set("trust proxy", 1);
+}
+
 // ——— 1. Helmet — security headers ———
 app.use(
   helmet({

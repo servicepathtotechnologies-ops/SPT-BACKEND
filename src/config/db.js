@@ -11,15 +11,27 @@ const useSsl = config.isProduction || config.database.ssl;
 // Supabase and many cloud Postgres use certs that need rejectUnauthorized: false
 // unless you provide a CA bundle. Set DATABASE_SSL_REJECT_UNAUTHORIZED=true in production with your own CA if needed.
 const sslRejectUnauthorized = process.env.DATABASE_SSL_REJECT_UNAUTHORIZED === "true";
-const pool = new Pool({
+
+const isSupabase =
+  typeof config.database.url === "string" &&
+  config.database.url.includes("supabase.co");
+
+const poolConfig = {
   connectionString: config.database.url,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
-  ...(useSsl && {
-    ssl: { rejectUnauthorized: sslRejectUnauthorized },
-  }),
-});
+};
+
+if (isSupabase) {
+  // Supabase uses a managed CA; in many hosting environments we need to skip
+  // strict verification to avoid “self-signed certificate in certificate chain”.
+  poolConfig.ssl = { rejectUnauthorized: false };
+} else if (useSsl) {
+  poolConfig.ssl = { rejectUnauthorized: sslRejectUnauthorized };
+}
+
+const pool = new Pool(poolConfig);
 
 pool.on("error", (err) => {
   console.error("[DB] Pool error:", err.message);
