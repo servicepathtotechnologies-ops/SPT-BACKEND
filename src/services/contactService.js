@@ -32,18 +32,32 @@ export async function submitContact(data) {
   await contactRepository.create(contact);
   logger.info("[Contact] Submission saved", { email: contact.email });
 
-  // Send admin notification in background so API responds immediately (better UX)
-  setImmediate(() => {
-    sendContactNotification(contact)
-      .then((emailResult) => {
-        if (emailResult.sent) {
-          logger.info("[Contact] Notification email sent");
-        } else if (emailResult.error && emailResult.error !== "Mail not configured") {
-          logger.error("[Contact] Email failed", { error: emailResult.error });
-        } else if (emailResult.error === "Mail not configured") {
-          logger.warn("[Contact] Mail not configured (MAIL_USER/MAIL_PASS). Skipping email.");
-        }
-      })
-      .catch((err) => logger.error("[Contact] Notification error", { error: err.message }));
-  });
+  // On Render, await email so it completes before the process can spin down (free tier).
+  // Locally, send in background for a fast response.
+  const isRender = process.env.RENDER === "true";
+
+  if (isRender) {
+    const emailResult = await sendContactNotification(contact);
+    if (emailResult.sent) {
+      logger.info("[Contact] Notification email sent");
+    } else if (emailResult.error && emailResult.error !== "Mail not configured") {
+      logger.error("[Contact] Email failed", { error: emailResult.error });
+    } else if (emailResult.error === "Mail not configured") {
+      logger.warn("[Contact] Mail not configured (MAIL_USER/MAIL_PASS). Skipping email.");
+    }
+  } else {
+    setImmediate(() => {
+      sendContactNotification(contact)
+        .then((emailResult) => {
+          if (emailResult.sent) {
+            logger.info("[Contact] Notification email sent");
+          } else if (emailResult.error && emailResult.error !== "Mail not configured") {
+            logger.error("[Contact] Email failed", { error: emailResult.error });
+          } else if (emailResult.error === "Mail not configured") {
+            logger.warn("[Contact] Mail not configured (MAIL_USER/MAIL_PASS). Skipping email.");
+          }
+        })
+        .catch((err) => logger.error("[Contact] Notification error", { error: err.message }));
+    });
+  }
 }
