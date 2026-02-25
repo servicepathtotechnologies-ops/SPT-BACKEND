@@ -4,8 +4,8 @@
  */
 import nodemailer from "nodemailer";
 
-/** Recipient for contact and demo notifications */
-const NOTIFICATION_TO = "servicepathtotechnologies@gmail.com";
+/** Recipient for contact and demo notifications (override via NOTIFICATION_EMAIL) */
+const NOTIFICATION_TO = process.env.NOTIFICATION_EMAIL || "servicepathtotechnologies@gmail.com";
 
 /**
  * Build HTML body for contact form notification.
