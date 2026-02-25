@@ -1,27 +1,31 @@
 # Email setup (Gmail with Nodemailer)
 
-Contact form submissions are saved in PostgreSQL and a notification email is sent to **servicepathtotechnologies@gmail.com**. Email is sent via Nodemailer using environment variables. If email fails (e.g. wrong credentials), the API still returns success as long as the database insert succeeds.
+Contact form submissions are saved in PostgreSQL and a notification email is sent to the admin (**servicepathtotechnologies@gmail.com** by default). Email is sent **in the background** so the API responds immediately for a fast user experience. If email fails (e.g. wrong credentials), the API still returns success as long as the database insert succeeds.
 
 ---
 
-## Required `.env` variables
+## Required `.env` variables (backend, e.g. on Render)
 
 | Variable     | Required | Description |
 |-------------|----------|-------------|
-| `MAIL_USER` | Yes      | Gmail address used to send (e.g. `yourname@gmail.com`) |
+| `MAIL_USER` | Yes      | Gmail address used to send (e.g. `servicepathtotechnologies@gmail.com`) |
 | `MAIL_PASS` | Yes      | Gmail **App Password** (not your normal Gmail password) |
 | `MAIL_HOST` | No       | Default: `smtp.gmail.com` |
 | `MAIL_PORT` | No       | Default: `587` |
 | `MAIL_SECURE` | No     | Default: `false` (use `true` for port 465) |
 | `MAIL_FROM` | No        | From address (default: same as `MAIL_USER`) |
 | `MAIL_FROM_NAME` | No    | Display name (e.g. "Service Path Technologies") |
+| `NOTIFICATION_EMAIL` | No | Recipient for contact/demo emails (default: servicepathtotechnologies@gmail.com) |
 
-**Minimal working example:**
+**Minimal working example (Render / production):**
 
 ```env
-MAIL_USER=your-email@gmail.com
+MAIL_USER=servicepathtotechnologies@gmail.com
 MAIL_PASS=xxxx xxxx xxxx xxxx
+NOTIFICATION_EMAIL=servicepathtotechnologies@gmail.com
 ```
+
+Set these in Render: **Dashboard → Your Service → Environment**.
 
 ---
 
@@ -45,14 +49,15 @@ Gmail requires an **App Password** when using Nodemailer (or any third‑party a
 6. Click **Generate**.
 7. Copy the **16-character password** (spaces are optional; the app will accept with or without).
 
-### Step 3: Put it in `.env`
+### Step 3: Set on Render (or in `.env` locally)
 
-```env
-MAIL_USER=yourname@gmail.com
-MAIL_PASS=abcd efgh ijkl mnop
-```
+On **Render**: Dashboard → your backend service → **Environment** → Add:
 
-Use the same Gmail account for `MAIL_USER` that you used to create the App Password. Do **not** commit `.env` to git (it should be in `.gitignore`).
+- `MAIL_USER` = `servicepathtotechnologies@gmail.com` (the Gmail that has 2-Step Verification and the App Password)
+- `MAIL_PASS` = the 16-character App Password (no spaces needed)
+- `NOTIFICATION_EMAIL` = `servicepathtotechnologies@gmail.com` (optional; this is the default)
+
+Use the same Gmail for `MAIL_USER` that you used to create the App Password. Do **not** commit secrets to git.
 
 ---
 

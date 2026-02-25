@@ -32,12 +32,18 @@ export async function submitContact(data) {
   await contactRepository.create(contact);
   logger.info("[Contact] Submission saved", { email: contact.email });
 
-  const emailResult = await sendContactNotification(contact);
-  if (emailResult.sent) {
-    logger.info("[Contact] Notification email sent");
-  } else if (emailResult.error && emailResult.error !== "Mail not configured") {
-    logger.error("[Contact] Email failed", { error: emailResult.error });
-  } else if (emailResult.error === "Mail not configured") {
-    logger.warn("[Contact] Mail not configured (MAIL_USER/MAIL_PASS). Skipping email.");
-  }
+  // Send admin notification in background so API responds immediately (better UX)
+  setImmediate(() => {
+    sendContactNotification(contact)
+      .then((emailResult) => {
+        if (emailResult.sent) {
+          logger.info("[Contact] Notification email sent");
+        } else if (emailResult.error && emailResult.error !== "Mail not configured") {
+          logger.error("[Contact] Email failed", { error: emailResult.error });
+        } else if (emailResult.error === "Mail not configured") {
+          logger.warn("[Contact] Mail not configured (MAIL_USER/MAIL_PASS). Skipping email.");
+        }
+      })
+      .catch((err) => logger.error("[Contact] Notification error", { error: err.message }));
+  });
 }
