@@ -1,17 +1,17 @@
 /**
  * Contact service — business logic for contact submissions.
- * Orchestrates repository, spam check, and email notification.
+ * Orchestrates repository, spam check, email notification, and socket emit.
  */
 import * as contactRepository from "../repositories/contactRepository.js";
+import * as statusHistoryRepository from "../repositories/statusHistoryRepository.js";
 import { sendContactNotification } from "./mailService.js";
+import { emitNewContact } from "./socketService.js";
 import { logger } from "../utils/logger.js";
 
 const DUPLICATE_WINDOW_SEC = 60;
 
 /**
- * Submit a contact form: spam check, persist, send email (non-blocking).
- * @param {{ full_name: string, email: string, phone?: string | null, company?: string | null, message: string }} data
- * @throws if duplicate within window (caller should respond 429)
+ * Submit a contact form: spam check, persist (default status Pending), send admin notification, emit new_contact.
  */
 export async function submitContact(data) {
   const contact = {
@@ -29,33 +29,31 @@ export async function submitContact(data) {
     throw err;
   }
 
-  await contactRepository.create(contact);
+  const created = await contactRepository.create(contact);
   logger.info("[Contact] Submission saved", { email: contact.email });
 
-  // On Render, await email so it completes before the process can spin down (free tier).
-  // Locally, send in background for a fast response.
-  const isRender = process.env.RENDER === "true";
+  await statusHistoryRepository.create({
+    entity_type: "contact",
+    entity_id: created.id,
+    old_status: null,
+    new_status: "Pending",
+    updated_by: null,
+  });
 
+  emitNewContact(created);
+
+  const isRender = process.env.RENDER === "true";
   if (isRender) {
     const emailResult = await sendContactNotification(contact);
-    if (emailResult.sent) {
-      logger.info("[Contact] Notification email sent");
-    } else if (emailResult.error && emailResult.error !== "Mail not configured") {
+    if (emailResult.sent) logger.info("[Contact] Notification email sent");
+    else if (emailResult.error && emailResult.error !== "Mail not configured")
       logger.error("[Contact] Email failed", { error: emailResult.error });
-    } else if (emailResult.error === "Mail not configured") {
-      logger.warn("[Contact] Mail not configured (MAIL_USER/MAIL_PASS). Skipping email.");
-    }
   } else {
     setImmediate(() => {
       sendContactNotification(contact)
-        .then((emailResult) => {
-          if (emailResult.sent) {
-            logger.info("[Contact] Notification email sent");
-          } else if (emailResult.error && emailResult.error !== "Mail not configured") {
-            logger.error("[Contact] Email failed", { error: emailResult.error });
-          } else if (emailResult.error === "Mail not configured") {
-            logger.warn("[Contact] Mail not configured (MAIL_USER/MAIL_PASS). Skipping email.");
-          }
+        .then((r) => {
+          if (r.sent) logger.info("[Contact] Notification email sent");
+          else if (r.error && r.error !== "Mail not configured") logger.error("[Contact] Email failed", { error: r.error });
         })
         .catch((err) => logger.error("[Contact] Notification error", { error: err.message }));
     });

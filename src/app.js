@@ -12,6 +12,9 @@ import config from "./config/index.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import demoRoutes from "./routes/demoRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import leadsRoutes from "./routes/leadsRoutes.js";
+import lostRoutes from "./routes/lostRoutes.js";
+import activityRoutes from "./routes/activityRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -66,6 +69,7 @@ const generalLimiter = rateLimit({
 });
 app.use("/api/", generalLimiter);
 
+// Only rate-limit public form submissions (POST), not admin GET/PATCH/DELETE
 const contactLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 5,
@@ -73,7 +77,10 @@ const contactLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use("/api/contact", contactLimiter);
+app.use("/api/contact", (req, res, next) => {
+  if (req.method === "POST") return contactLimiter(req, res, next);
+  next();
+});
 
 const demoLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -82,7 +89,10 @@ const demoLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use("/api/demo", demoLimiter);
+app.use("/api/demo", (req, res, next) => {
+  if (req.method === "POST") return demoLimiter(req, res, next);
+  next();
+});
 
 const adminLoginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -102,6 +112,9 @@ app.get("/health", (req, res) => {
 app.use("/api/contact", contactRoutes);
 app.use("/api/demo", demoRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/leads", leadsRoutes);
+app.use("/api/lost", lostRoutes);
+app.use("/api/activity", activityRoutes);
 
 // 404 handler
 app.use((req, res, next) => {

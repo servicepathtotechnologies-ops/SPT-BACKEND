@@ -73,3 +73,14 @@ export const validate = (req, res, next) => {
 
 /** Alias for POST contact validation. */
 export const validateContact = validate;
+
+const STATUS_VALUES = ["Pending", "Processing", "Contacted", "Qualified", "Lead", "Lost"];
+
+export const patchContactStatusRules = [
+  body("status")
+    .trim()
+    .notEmpty()
+    .withMessage("Status is required.")
+    .isIn(STATUS_VALUES)
+    .withMessage(`Status must be one of: ${STATUS_VALUES.join(", ")}`),
+];

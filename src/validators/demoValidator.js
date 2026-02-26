@@ -71,3 +71,14 @@ export const validate = (req, res, next) => {
 };
 
 export const validateDemo = validate;
+
+const STATUS_VALUES = ["Pending", "Scheduled", "Completed", "Cancelled", "Lead", "Lost"];
+
+export const patchDemoStatusRules = [
+  body("status")
+    .trim()
+    .notEmpty()
+    .withMessage("Status is required.")
+    .isIn(STATUS_VALUES)
+    .withMessage(`Status must be one of: ${STATUS_VALUES.join(", ")}`),
+];

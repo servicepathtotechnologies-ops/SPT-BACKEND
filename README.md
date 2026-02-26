@@ -61,7 +61,9 @@ Create your PostgreSQL database, then run the schema:
 psql -U youruser -d yourdbname -f sql/schema.sql
 ```
 
-Or run the contents of `sql/schema.sql` in your DB client. The schema includes an `admins` table for admin authentication.
+Or run the contents of `sql/schema.sql` in your DB client. The schema includes `contacts`, `demos`, and `admins` tables. Contacts and demos have a `status` column for CRM tracking.
+
+If your database was created before the `status` column existed, run `sql/migrations/001_add_status_to_contacts_demos.sql` in your SQL client to add it.
 
 **Create the first admin user (one-time):**
 
@@ -134,7 +136,8 @@ Server runs at `http://localhost:5000` (or your `PORT`). Health check: **GET** `
 }
 ```
 
-- **GET** `/api/contact` — list all submissions (admin only; requires `Authorization: Bearer <token>`). Query: `?limit=100&offset=0`.
+- **GET** `/api/contact` — list all submissions (admin only; requires `Authorization: Bearer <token>`). Query: `?limit=100&offset=0`. Each row includes `status` (new, contacted, qualified, converted, lost).
+- **PATCH** `/api/contact/:id` — update contact status (admin only). Body: `{ "status": "contacted" }`. Allowed values: `new`, `contacted`, `qualified`, `converted`, `lost`.
 - **DELETE** `/api/contact/:id` — delete one submission by UUID (admin only; requires `Authorization: Bearer <token>`). Returns 204 on success, 404 if not found.
 
 ### Admin authentication
@@ -162,6 +165,12 @@ Server runs at `http://localhost:5000` (or your `PORT`). Health check: **GET** `
 **Invalid credentials (401):** `{ "success": false, "message": "Invalid email or password." }`
 
 Use the returned `token` in the `Authorization` header for protected routes: `Authorization: Bearer <token>`.
+
+### Demo (admin + public)
+
+- **GET** `/api/demo` — list all demo bookings (admin only). Response includes `status`.
+- **PATCH** `/api/demo/:id` — update demo status (admin only). Body: `{ "status": "contacted" }`. Same allowed values as contact.
+- **DELETE** `/api/demo/:id` — delete one demo (admin only). Returns 204 on success.
 
 ## Security
 

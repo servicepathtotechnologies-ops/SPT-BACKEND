@@ -7,9 +7,15 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "create-admin": "node scripts/create-admin.js"
+    "create-admin": "node scripts/create-admin.js",
+    "migrate": "node scripts/run-migration.js sql/migrations/002_real_time_crm_status_and_history.sql"
   },
-  "keywords": ["express", "postgresql", "api", "contact-form"],
+  "keywords": [
+    "express",
+    "postgresql",
+    "api",
+    "contact-form"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -17,13 +23,14 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
-    "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.16",
     "express-rate-limit": "^7.2.0",
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
-    "pg": "^8.12.0"
+    "nodemailer": "^8.0.1",
+    "pg": "^8.12.0",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

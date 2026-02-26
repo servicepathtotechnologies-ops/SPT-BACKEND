@@ -5,11 +5,13 @@ import { Router } from "express";
 import {
   getAllContacts,
   submitContact,
+  updateContactStatus,
   deleteContact,
 } from "../controllers/contactController.js";
 import {
   contactValidationRules,
   listContactValidationRules,
+  patchContactStatusRules,
   validateContact,
   validate,
 } from "../validators/contactValidator.js";
@@ -22,6 +24,12 @@ router.get("/", authenticate, listContactValidationRules, validate, getAllContac
 
 // POST /api/contact — submit contact form (public; validation + controller)
 router.post("/", contactValidationRules, validateContact, submitContact);
+
+// PUT /api/contact/:id/status — update status (admin only)
+router.put("/:id/status", authenticate, patchContactStatusRules, validate, updateContactStatus);
+
+// PATCH /api/contact/:id — update status (admin only, backward compat)
+router.patch("/:id", authenticate, patchContactStatusRules, validate, updateContactStatus);
 
 // DELETE /api/contact/:id — delete one contact (admin only)
 router.delete("/:id", authenticate, deleteContact);

@@ -1,16 +1,21 @@
 /**
- * Server entry point — starts Express app and handles graceful shutdown.
- * Set NODE_ENV=production for production. Security and app config live in src/app.js and src/config.
+ * Server entry point — starts Express app, Socket.io, and handles graceful shutdown.
+ * Set NODE_ENV=production for production.
  */
 import "dotenv/config";
+import http from "http";
 import app from "./src/app.js";
 import config from "./src/config/index.js";
 import { pool } from "./src/config/db.js";
+import { init as initSocket } from "./src/services/socketService.js";
 
 const { port } = config.server;
 const { timeoutMs } = config.shutdown;
 
-const server = app.listen(port, () => {
+const httpServer = http.createServer(app);
+initSocket(httpServer);
+
+httpServer.listen(port, () => {
   console.log(`Server running on port ${port} (NODE_ENV=${config.env})`);
 });
 
@@ -23,7 +28,7 @@ const gracefulShutdown = (signal) => {
 
   console.log(`[Server] ${signal} received. Shutting down gracefully...`);
 
-  server.close((err) => {
+  httpServer.close((err) => {
     if (err) {
       console.error("[Server] Error closing HTTP server:", err);
     } else {
@@ -42,7 +47,6 @@ const gracefulShutdown = (signal) => {
       });
   });
 
-  // Force exit if shutdown hangs
   setTimeout(() => {
     console.error("[Server] Forced shutdown after timeout.");
     process.exit(1);
@@ -52,7 +56,6 @@ const gracefulShutdown = (signal) => {
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-// Optional: log unhandled rejections (avoid silent failures)
 process.on("unhandledRejection", (reason, promise) => {
   console.error("[Server] Unhandled Rejection at:", promise, "reason:", reason);
 });
